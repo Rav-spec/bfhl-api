@@ -164,6 +164,7 @@ app.post("/bfhl", async (req, res) => {
         }
 
         // ---------- AI ----------
+// ---------- AI ----------
 if (key === "AI") {
 
     const question = body.AI;
@@ -176,23 +177,23 @@ if (key === "AI") {
         });
     }
 
- const url =
-`https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
     const response = await axios.post(url, {
         contents: [
             {
                 parts: [
-                    { text: question + ". Reply in exactly one word only." }
+                    { text: question + " Reply in exactly one word only." }
                 ]
             }
         ]
     });
 
-    const candidate = response.data?.candidates?.[0];
-    const part = candidate?.content?.parts?.[0]?.text;
+    const text =
+        response.data?.candidates?.[0]?.content?.parts?.[0]?.text;
 
-    if (!part) {
+    if (!text) {
         return res.status(502).json({
             is_success: false,
             official_email: EMAIL,
@@ -200,14 +201,13 @@ if (key === "AI") {
         });
     }
 
-    let text = part.trim().split(/\s+/)[0];
-
     return res.json({
         is_success: true,
         official_email: EMAIL,
-        data: text
+        data: text.trim().split(/\s+/)[0]
     });
 }
+
 
 
         // ---------- unknown key ----------
