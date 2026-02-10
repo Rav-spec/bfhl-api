@@ -164,44 +164,51 @@ app.post("/bfhl", async (req, res) => {
         }
 
         // ---------- AI ----------
-        if (key === "AI") {
+if (key === "AI") {
 
-            const question = body.AI;
+    const question = body.AI;
 
-            if (typeof question !== "string" || question.trim() === "") {
-                return res.status(400).json({
-                    is_success: false,
-                    official_email: EMAIL,
-                    error: "AI expects a string"
-                });
-            }
+    if (typeof question !== "string" || question.trim() === "") {
+        return res.status(400).json({
+            is_success: false,
+            official_email: EMAIL,
+            error: "AI expects a string"
+        });
+    }
 
-            // Gemini API call
-            const url =
-                `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${process.env.GEMINI_API_KEY}`;
+    const url =
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${process.env.GEMINI_API_KEY}`;
 
-            const response = await axios.post(url, {
-                contents: [
-                    {
-                        parts: [
-                            { text: question }
-                        ]
-                    }
+    const response = await axios.post(url, {
+        contents: [
+            {
+                parts: [
+                    { text: question + ". Reply in exactly one word only." }
                 ]
-            });
+            }
+        ]
+    });
 
-            let text =
-                response.data.candidates[0].content.parts[0].text;
+    const candidate = response.data?.candidates?.[0];
+    const part = candidate?.content?.parts?.[0]?.text;
 
-            // only single word expected
-            text = text.trim().split(/\s+/)[0];
+    if (!part) {
+        return res.status(502).json({
+            is_success: false,
+            official_email: EMAIL,
+            error: "AI service failed"
+        });
+    }
 
-            return res.json({
-                is_success: true,
-                official_email: EMAIL,
-                data: text
-            });
-        }
+    let text = part.trim().split(/\s+/)[0];
+
+    return res.json({
+        is_success: true,
+        official_email: EMAIL,
+        data: text
+    });
+}
+
 
         // ---------- unknown key ----------
         return res.status(400).json({
